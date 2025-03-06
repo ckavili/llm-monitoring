@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-status
+  labels:
+    app: service-status
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-status
+  template:
+    metadata:
+      labels:
+        app: service-status
+    spec:
+      containers:
+        - name: service-status
+          image: quay.io/ckavili/service-status-dashboard:0.0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "250m"
+              memory: "128Mi"

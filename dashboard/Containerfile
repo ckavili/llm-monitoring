@@ -1,0 +1,16 @@
+FROM registry.access.redhat.com/ubi9/python-311:9.5
+
+# Set working directory
+WORKDIR /app
+
+# Copy required files
+COPY service_status_dashboard.py /app/
+
+# Install required Python packages
+RUN pip install --no-cache-dir flask requests
+
+# Expose port for the Flask web dashboard
+EXPOSE 5000
+
+# Set the command to run the Flask app
+CMD ["python", "service_status_dashboard.py"]

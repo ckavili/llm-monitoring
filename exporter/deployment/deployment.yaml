@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: llm-monitor
-          image: quay.io/ckavili/rh-bu-monitoring:0.0.2 
+          image: quay.io/ckavili/rh-bu-monitoring:0.0.5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
