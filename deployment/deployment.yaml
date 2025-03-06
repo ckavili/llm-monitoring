@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-monitor
+  labels:
+    app: llm-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-monitor
+  template:
+    metadata:
+      labels:
+        app: llm-monitor
+    spec:
+      containers:
+        - name: llm-monitor
+          image: quay.io/ckavili/rh-bu-monitoring:0.0.2 
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config/endpoints.json
+              subPath: endpoints.json
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: llm-monitor-config

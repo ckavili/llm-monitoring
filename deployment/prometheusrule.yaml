@@ -1,0 +1,18 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: llm-monitoring
+spec:
+  groups:
+  - name: llm-monitoring.rules
+    rules:
+    # example alert - more to add
+    - alert: llm-updown-alert
+      annotations:
+        message: 'deepseek-r1-distill-qwen-14b is down!🙊'
+      expr: llm_endpoint_status{name="deepseek-r1-distill-qwen-14b"} == 1
+      for: 1m
+      labels:
+        severity: "critical"
+

@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-monitor
+  labels:
+    app: llm-monitor
+spec:
+  selector:
+    app: llm-monitor
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      name: metrics
+  type: ClusterIP
