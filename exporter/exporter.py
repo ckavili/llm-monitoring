@@ -91,18 +91,30 @@ class EndpointMonitor:
     
     def check_vision_endpoint(self, endpoint: Dict[str, str]) -> Tuple[bool, Optional[float], Optional[str]]:
         """Check a vision model endpoint."""
-        client = OpenAI(api_key=endpoint['token'], base_url=endpoint['url'])
+
+        headers = {
+            "Authorization": f"Bearer {endpoint['token']}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "prompt": "a balloon with cartoon style"
+        }
         
         try:
             start_time = time.time()
-            response = client.images.generate(prompt="a balloon cartoon style")
+            response = requests.post(f"{endpoint['url']}/generate", json=payload, headers=headers)
             latency = time.time() - start_time
-            logger.info(f"Successfully checked vision endpoint {endpoint['url']} - Latency: {latency:.3f}s")
-            return True, latency, None
-        except APIError:
-            return False, None, "api_error"
-        except Exception as e:
-            return False, None, "unknown"
+            
+            if response.status_code == 200:
+                logger.info(f"Successfully checked embedding endpoint {endpoint['url']} - Latency: {latency:.3f}s")
+                return True, latency, None
+            else:
+                logger.warning(f"Embedding endpoint {endpoint['url']} returned HTTP {response.status_code}")
+                return False, None, f"http_{response.status_code}"
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Connection error while checking embedding endpoint {endpoint['url']}: {e}")
+            return False, None, "connection"
+    
     
     def check_website(self, endpoint: Dict[str, str]) -> Tuple[bool, Optional[float], Optional[str]]:
         """Check if a website is up and responsive."""
