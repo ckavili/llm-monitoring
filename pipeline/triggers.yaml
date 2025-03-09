@@ -1,0 +1,19 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1 
+kind: Trigger 
+metadata:
+  name: llm-monitoring-trigger 
+spec:
+  interceptors:
+     - ref:
+         name: "cel" 
+       params:
+        - name: overlays
+          value:
+          - expression: body.commonLabels.name
+            key: model_name
+  bindings:
+    - name: model_name
+      value: $(extensions.model_name)
+  template: 
+     ref: llm-monitoring-trigger-template

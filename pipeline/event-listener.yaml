@@ -1,0 +1,25 @@
+# might need to update based on the Git Server we choose
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: llm-monitoring-listener
+spec:
+  triggers:
+    - triggerRef: llm-monitoring-trigger
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: el-llm-monitoring-listener
+spec:
+  to:
+    kind: Service
+    name: el-llm-monitoring-listener
+    weight: 100
+  port:
+    targetPort: http-listener
+  wildcardPolicy: None
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

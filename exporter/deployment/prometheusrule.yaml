@@ -1,3 +1,4 @@
+---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -8,7 +9,7 @@ spec:
     rules:
     - alert: llm-updown-alert
       annotations:
-        message: '{{ $labels.name }} is down! 🙊'
+        message: '{{ $labels.name }} is down!'
       expr: llm_endpoint_status{name=~".*"} == 1
       for: 1m
       labels:

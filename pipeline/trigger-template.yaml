@@ -1,0 +1,22 @@
+
+---
+apiVersion: triggers.tekton.dev/v1beta1	
+kind: TriggerTemplate
+metadata:
+  name: llm-monitoring-trigger-template
+spec:
+  params:
+    - name: model_name
+      description: The name of the model
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: llm-monitoring-pipeline-
+      spec:
+        pipelineRef:
+          name: llm-monitoring-pipeline
+        params:
+          - name: MODEL_NAME
+            value: $(tt.params.model_name)
+

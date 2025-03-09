@@ -1,0 +1,18 @@
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: llm-monitoring-pipeline
+spec:
+  params:
+    - name: MODEL_NAME
+      type: string
+      default: ""
+  tasks:
+    - name: send-notification
+      taskRef:
+        name: send-notification
+        kind: Task
+      params:
+        - name: MODEL_NAME
+          value: "$(params.MODEL_NAME)"

@@ -1,0 +1,16 @@
+---
+apiVersion: monitoring.coreos.com/v1beta1
+kind: AlertmanagerConfig
+metadata:
+  name: llm-alerting-test5
+spec:
+  receivers:
+    - name: default
+      webhookConfigs:
+        - url: 'https://el-llm-monitoring-listener.com/'
+  route:
+    matchers:
+      - matchType: '='
+        name: alertname
+        value: llm-updown-alert-test
+    receiver: default

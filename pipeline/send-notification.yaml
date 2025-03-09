@@ -1,0 +1,85 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: send-notification
+spec:
+  params:
+    - name: MODEL_NAME
+      description: Name of the model
+      type: string
+  steps:
+    - name: send-notification
+      image: registry.redhat.io/ubi9/python-311@sha256:fc669a67a0ef9016c3376b2851050580b3519affd5ec645d629fd52d2a8b8e4a
+      script: |
+        #!/bin/sh
+        echo $(params.MODEL_NAME) 
+        
+        python3 -m pip install openai requests kubernetes
+        cat << 'EOF' | python3
+        import os
+        import subprocess
+        import requests
+        from kubernetes import client, config
+        from openai import OpenAI, APIError, RateLimitError, APIConnectionError
+
+        os.environ['SSL_CERT_FILE'] = '/tekton-custom-certs/ca-bundle.crt'
+
+        config.load_incluster_config()
+
+        def get_pod_logs(pod_name: str, namespace: str, tail_lines: int = 10):
+            v1 = client.CoreV1Api()
+            
+            try:
+                logs = v1.read_namespaced_pod_log(name=pod_name, namespace=namespace, tail_lines=tail_lines)
+                return logs.strip() if logs else "No logs available."
+            except client.exceptions.ApiException as e:
+                return f"Failed to fetch logs: {e}"
+
+        # Define pod and namespace
+        pod_name = "pod-name" 
+        namespace = "namespace"
+
+        # Fetch logs
+        logs = get_pod_logs(pod_name, namespace)
+
+        client = OpenAI(api_key="xxx", base_url="https://maas-model-endpoint:443/v1")
+
+        response = client.chat.completions.create(
+            model="mistral-7b-instruct",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Analyze the following error log and explain what went wrong. Identify the root cause and suggest possible solutions or troubleshooting steps. Keep it short and snappy.\n\n```\n{logs}\n```"
+                }
+            ],
+            max_tokens=500
+        )
+
+        summary = response.choices[0].message.content
+        print(summary)
+
+        # Format for Slack message
+        slack_message = f"""
+        🚨 *{pod_name}* is not responding.
+
+
+        🔍 *Possible Cause:*
+        {summary}
+
+
+        📚 *Logs:*
+        ```
+        {logs}
+        ```
+        """
+
+        slack_payload = {"text": slack_message}
+
+        # Send to Slack webhook
+        slack_webhook_url = "https://hooks.slack.com/services/xxx" 
+        requests.post(slack_webhook_url, json=slack_payload)
+
+        EOF
+
+
