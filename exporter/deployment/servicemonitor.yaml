@@ -2,11 +2,11 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: llm-monitor
+  name: llm-monitoring
 spec:
   selector:
     matchLabels:
-      app: llm-monitor
+      app: llm-monitoring
   endpoints:
     - port: metrics
       path: /

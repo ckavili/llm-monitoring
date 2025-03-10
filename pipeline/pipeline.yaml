@@ -8,6 +8,9 @@ spec:
     - name: MODEL_NAME
       type: string
       default: ""
+    - name: TYPE
+      type: string
+      default: ""
   tasks:
     - name: send-notification
       taskRef:
@@ -16,3 +19,5 @@ spec:
       params:
         - name: MODEL_NAME
           value: "$(params.MODEL_NAME)"
+        - name: TYPE
+          value: "$(params.TYPE)"

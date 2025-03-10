@@ -10,10 +10,7 @@ spec:
     - alert: llm-updown-alert
       annotations:
         message: '{{ $labels.name }} is down!'
-      expr: llm_endpoint_status{name=~".*"} == 1
+      expr: llm_endpoint_status{name=~".*"} == 0
       for: 1m
       labels:
         severity: "critical"
-
-# PVC alerts
-# MaaS other alerts?

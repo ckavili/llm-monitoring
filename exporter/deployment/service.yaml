@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: llm-monitor
+  name: llm-monitoring
   labels:
-    app: llm-monitor
+    app: llm-monitoring
 spec:
   selector:
-    app: llm-monitor
+    app: llm-monitoring
   ports:
     - protocol: TCP
       port: 8000

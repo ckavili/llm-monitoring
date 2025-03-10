@@ -12,8 +12,12 @@ spec:
           value:
           - expression: body.commonLabels.name
             key: model_name
+          - expression: body.commonLabels.type
+            key: type
   bindings:
     - name: model_name
       value: $(extensions.model_name)
+    - name: type
+      value: $(extensions.type)
   template: 
      ref: llm-monitoring-trigger-template

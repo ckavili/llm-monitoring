@@ -8,6 +8,8 @@ spec:
   params:
     - name: model_name
       description: The name of the model
+    - name: type
+      description: The type of the model (openai, embedding, etc)
   resourcetemplates:
     - apiVersion: tekton.dev/v1
       kind: PipelineRun
@@ -19,4 +21,5 @@ spec:
         params:
           - name: MODEL_NAME
             value: $(tt.params.model_name)
-
+          - name: TYPE
+            value: $(tt.params.type)

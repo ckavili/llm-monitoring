@@ -10,4 +10,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: pipeline
-    namespace: mynamespace # update accordingly
+    namespace: llm-monitoring

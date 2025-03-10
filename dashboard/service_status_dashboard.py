@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # Prometheus metrics endpoint
-PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://llm-monitor:8000/")
+PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://llm-monitoring:8000/")
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>

@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: llm-monitor
+  name: llm-monitoring
   labels:
-    app: llm-monitor
+    app: llm-monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: llm-monitor
+      app: llm-monitoring
   template:
     metadata:
       labels:
-        app: llm-monitor
+        app: llm-monitoring
     spec:
       containers:
-        - name: llm-monitor
-          image: quay.io/ckavili/rh-bu-monitoring:0.0.5
-          imagePullPolicy: IfNotPresent
+        - name: llm-monitoring
+          image: quay.io/ckavili/llm-monitoring:0.0.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           volumeMounts:
@@ -35,4 +35,4 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: llm-monitor-config
+            name: llm-monitoring-config

@@ -8,42 +8,80 @@ spec:
     - name: MODEL_NAME
       description: Name of the model
       type: string
+    - name: TYPE
+      description: The type of the model (openai, embedding, etc)
+      type: string
   steps:
     - name: send-notification
       image: registry.redhat.io/ubi9/python-311@sha256:fc669a67a0ef9016c3376b2851050580b3519affd5ec645d629fd52d2a8b8e4a
+      env:
+        - name: slack-webhook
+          valueFrom:
+            secretKeyRef:
+              name: slack-webhook
+              key: "endpoint"
       script: |
         #!/bin/sh
-        echo $(params.MODEL_NAME) 
+        echo $(params.MODEL_NAME)
+        echo $(params.TYPE)
         
         python3 -m pip install openai requests kubernetes
         cat << 'EOF' | python3
         import os
         import subprocess
         import requests
-        from kubernetes import client, config
         from openai import OpenAI, APIError, RateLimitError, APIConnectionError
+        from kubernetes import client, config
 
         os.environ['SSL_CERT_FILE'] = '/tekton-custom-certs/ca-bundle.crt'
+        slack_webhook_url = os.environ.get('slack-webhook')
 
-        config.load_incluster_config()
+        model_name = "$(params.MODEL_NAME)"
 
-        def get_pod_logs(pod_name: str, namespace: str, tail_lines: int = 10):
-            v1 = client.CoreV1Api()
+        # Load Kubernetes config (in-cluster or local)
+        try:
+            config.load_incluster_config()
+        except config.ConfigException:
+            config.load_kube_config()
+
+
+        def get_deployment_logs(deployment_name: str, namespace: str, tail_lines: int = 5):
+            config.load_incluster_config()
+            
+            apps_v1 = client.AppsV1Api()
+            core_v1 = client.CoreV1Api()
             
             try:
-                logs = v1.read_namespaced_pod_log(name=pod_name, namespace=namespace, tail_lines=tail_lines)
+                # Get the deployment to find its selector
+                deployment = apps_v1.read_namespaced_deployment(name=deployment_name, namespace=namespace)
+                
+                # Get the selector from the deployment
+                selector = deployment.spec.selector.match_labels
+                
+                # Convert the selector to a string format for the label selector
+                label_selector = ",".join([f"{k}={v}" for k, v in selector.items()])
+                
+                # List pods with the matching labels
+                pods = core_v1.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
+                
+                if not pods.items:
+                    return f"No pods found for deployment {deployment_name}"
+                
+                # Get logs from the first pod (you could iterate through all pods if needed)
+                pod_name = pods.items[0].metadata.name
+                logs = core_v1.read_namespaced_pod_log(name=pod_name, namespace=namespace, tail_lines=tail_lines)
+                
                 return logs.strip() if logs else "No logs available."
+            
             except client.exceptions.ApiException as e:
                 return f"Failed to fetch logs: {e}"
 
-        # Define pod and namespace
-        pod_name = "pod-name" 
-        namespace = "namespace"
+        deployment_name = f"{model_name}-predictor" 
+        namespace = "llm-hosting"
+        logs = get_deployment_logs(deployment_name, namespace)
+        print(logs)
 
-        # Fetch logs
-        logs = get_pod_logs(pod_name, namespace)
-
-        client = OpenAI(api_key="xxx", base_url="https://maas-model-endpoint:443/v1")
+        client = OpenAI(api_key="xxx", base_url="https://mistral-7b-instruct-v0-3-maas-apicast-production.xxxx.com:443/v1")
 
         response = client.chat.completions.create(
             model="mistral-7b-instruct",
@@ -61,7 +99,7 @@ spec:
 
         # Format for Slack message
         slack_message = f"""
-        🚨 *{pod_name}* is not responding.
+        🚨 *{model_name}* is not responding!
 
 
         🔍 *Possible Cause:*
@@ -77,9 +115,4 @@ spec:
         slack_payload = {"text": slack_message}
 
         # Send to Slack webhook
-        slack_webhook_url = "https://hooks.slack.com/services/xxx" 
         requests.post(slack_webhook_url, json=slack_payload)
-
-        EOF
-
-
